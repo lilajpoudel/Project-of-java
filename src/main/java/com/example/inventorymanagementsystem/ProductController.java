@@ -13,6 +13,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -72,24 +74,22 @@ public class ProductController implements Initializable {
     public ObservableList<Product> getProducts(){
         ObservableList<Product> products = FXCollections.observableArrayList();
 
-        String query = "select* from products";
-        con = DBConnection.getCon();
-        try {
-            st = con.prepareStatement(query);
-            rs= st.executeQuery();
-            while (rs.next()){
-                Product st = new Product();
-                st.setId(rs.getInt("id"));
-                st.setName(rs.getString("Name"));
-                st.setDescription(rs.getString("Description"));
-                st.setQuantity(rs.getString("Quantity"));
-
-                products.add(st);
-
+        try{
+            String response = APIController.getData("http://localhost:8080/ims/api/products","GET");
+            JSONArray productsJson = new JSONArray(response);
+            for(int i=0;i<productsJson.length();i++){
+                JSONObject productJson = productsJson.getJSONObject(i);
+                Product product = new Product();
+                product.setId(productJson.getInt("id"));
+                product.setName(productJson.getString("name"));
+                product.setDescription(productJson.getString("description"));
+                product.setQuantity(productJson.getString("quantity"));
+                products.add(product);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
         return products;
     }
     public void showProducts(){
